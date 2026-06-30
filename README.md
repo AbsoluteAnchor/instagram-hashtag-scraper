@@ -1,220 +1,175 @@
-[Instagram Hashtag Scraper](https://apify.com/instaprism/instagram-hashtag-scraper?fpr=data)
+[Instagram Hashtag Scraper](https://apify.com/sovereigntaylor/instagram-hashtag-scraper?fpr=data)
 
-# Instagram Hashtag Scraper - Find Users by Hashtag Interest 2026
+# Instagram Hashtag Scraper
 
-Extract users who post with specific hashtags. Find your target audience by their interests and passions. Perfect for niche marketing, influencer discovery, and interest-based lead generation.
+Scrape Instagram posts by hashtag without an API key. Extract captions, likes, comments, authors, images, videos, locations, hashtags, and mentions from any public hashtag.
 
-## No Login Required
+## Use Cases
 
-**Your Instagram account stays safe.** This Actor:
+- **Influencer Marketing** — Find top-performing posts and influencers for any hashtag. Identify potential brand ambassadors by analyzing engagement rates, follower counts, and content quality across your target hashtags.
+- **Trend Analysis** — Monitor hashtag growth and content trends over time. Track which hashtags are gaining momentum, what type of content performs best, and how engagement patterns shift across seasons and events.
+- **Competitor Research** — Analyze your competitors' branded hashtags and campaigns. See what content resonates with their audience, benchmark engagement metrics, and discover gaps in their content strategy.
+- **Content Strategy** — Discover what types of posts perform best for specific hashtags. Use data on top-performing captions, image styles, posting times, and engagement patterns to optimize your own content calendar.
+- **Market Research** — Understand audience sentiment and behavior around topics, products, or brands. Aggregate post data to identify customer pain points, popular product features, and emerging market trends.
+- **UGC Discovery** — Find user-generated content featuring your brand or products. Identify authentic customer posts that can be repurposed (with permission) for marketing campaigns and social proof.
 
-- Does NOT require your Instagram login or cookies
-- Uses our own infrastructure to fetch data
-- Zero risk of account suspension for you
-- Works with any public Instagram profile
+## Features
 
-Unlike browser extensions or tools that use your account, we handle all scraping server-side. Your credentials are never needed.
-
-## Important: Processing Time
-
-**This Actor uses a distributed scraping architecture.** Here's what to expect:
-
-| Data Size | First Results | Complete Results |
-| --- | --- | --- |
-| 1,000 users | 5-10 min | 10-20 min |
-| 5,000 users | 10-20 min | 30-60 min |
-| 10,000+ users | 20-30 min | 1-2+ hours |
-
-**Why does it take time?**
-
-- Instagram has strict rate limits to prevent spam
-- We use multiple proxy servers worldwide to stay undetected
-- Popular hashtags require extensive data fetching
-
-**Don't worry about timeouts!** Our streaming mode saves results every 60 seconds. Even if Apify times out after 24h, you'll have all the data collected up to that point.
-
-## What You Get
-
-- **User ID** - Unique Instagram identifier for each user
-- **Username** - Instagram handle (without @)
-- **Full Name** - Display name from their profile
-- **Profile Picture URL** - Direct link to their profile image
-- **Verification Status** - Whether the account has a blue checkmark
-- **Source Hashtag** - Which hashtag they posted with
-- **Timestamp** - When the data was scraped
-
-## Why Hashtag Targeting Works
-
-Hashtags reveal what people care about. Someone posting #veganrecipes is likely interested in:
-
-- Plant-based products
-- Health and wellness
-- Cooking and food
-- Sustainable living
-
-This is **intent-based targeting** - you're finding people based on their actions, not just demographics.
+- No API key or Instagram login required
+- Multiple extraction strategies (embedded JSON, meta tags, DOM parsing)
+- Google search fallback when Instagram blocks direct access
+- 12 rotating user agents to avoid detection
+- Automatic pagination for large scrapes
+- Deduplication by post shortcode
+- Pay-per-event pricing ($0.003 per post)
+- Proxy support (residential proxies recommended)
+- Sorts by recent or top posts
+- Optional comment extraction
 
 ## Input
 
-| Parameter | Type | Required | Default | Description |
+| Field | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `hashtags` | Array | Yes | - | List of hashtags to scrape (without the # symbol) |
-| `limit` | Integer | No | 1000 | Maximum users to extract per hashtag |
-| `extractEmails` | Boolean | No | false | Try to extract contact info from business profiles |
+| `hashtags` | array | Yes | — | Hashtags to scrape (without #). Example: `["travel", "photography"]` |
+| `maxPosts` | integer | No | 500 | Maximum posts to scrape per run (1–10,000) |
+| `sortBy` | string | No | `recent` | Sort order: `recent` or `top` |
+| `includeComments` | boolean | No | `false` | Scrape comments for each post (slower) |
+| `proxyConfiguration` | object | No | — | Proxy settings. Residential proxies recommended |
 
 ### Example Input
 
 ```
 {
-    "hashtags": [
-        "veganrecipes",
-        "plantbased",
-        "healthyfood"
-    ],
-    "limit": 2000,
-    "extractEmails": false
+  "hashtags": ["travel", "wanderlust"],
+  "maxPosts": 100,
+  "sortBy": "top",
+  "includeComments": false,
+  "proxyConfiguration": {
+    "useApifyProxy": true,
+    "apifyProxyGroups": ["RESIDENTIAL"]
+  }
 }
 ```
 
 ## Output
 
-| Field | Type | Example | Description |
-| --- | --- | --- | --- |
-| `position` | Integer | 1 | Position in the results |
-| `userId` | String | "12345678901" | Unique Instagram user ID |
-| `username` | String | "healthy_chef" | Instagram username |
-| `fullName` | String | "Healthy Chef" | User's display name |
-| `profilePicUrl` | String | "[https://scontent](https://scontent)..." | URL to profile picture |
-| `isVerified` | Boolean | false | True if account has blue checkmark |
-| `sourceHashtag` | String | "veganrecipes" | Hashtag they posted with |
-| `scrapedAt` | String | "2026-01-15T10:30:00.000Z" | ISO timestamp of extraction |
+Each post is saved as a dataset item with the following fields:
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `shortcode` | string | Unique Instagram post identifier |
+| `caption` | string | Post caption text |
+| `likes` | number | Number of likes |
+| `comments` | number | Number of comments |
+| `author` | string | Username of the post author |
+| `authorFollowers` | number | Author's follower count (when available) |
+| `imageUrl` | string | URL of the post image |
+| `videoUrl` | string | URL of the video (if video post) |
+| `isVideo` | boolean | Whether the post is a video/reel |
+| `date` | string | ISO 8601 timestamp of when the post was created |
+| `location` | string | Location tag (when available) |
+| `hashtags` | array | Hashtags found in the caption |
+| `mentions` | array | @mentions found in the caption |
+| `postUrl` | string | Direct URL to the Instagram post |
+| `sourceHashtag` | string | Which input hashtag this post was found under |
+| `scrapedAt` | string | ISO 8601 timestamp of when the post was scraped |
+| `extractionStrategy` | string | Which extraction method was used |
 
 ### Example Output
 
 ```
-[
-    {
-        "position": 1,
-        "userId": "12345678901",
-        "username": "healthy_chef_mike",
-        "fullName": "Mike's Healthy Kitchen",
-        "profilePicUrl": "https://scontent-cdg4-1.cdninstagram.com/v/t51.2885-19/...",
-        "isVerified": false,
-        "sourceHashtag": "veganrecipes",
-        "scrapedAt": "2026-01-15T10:30:00.000Z"
-    },
-    {
-        "position": 2,
-        "userId": "98765432109",
-        "username": "plantbased_life",
-        "fullName": "Plant Based Life",
-        "profilePicUrl": "https://scontent-cdg4-1.cdninstagram.com/v/t51.2885-19/...",
-        "isVerified": true,
-        "sourceHashtag": "veganrecipes",
-        "scrapedAt": "2026-01-15T10:30:01.000Z"
-    }
-]
+{
+  "shortcode": "C3xK9mNPqRs",
+  "caption": "Exploring the hidden gems of Bali #travel #wanderlust #bali",
+  "likes": 15234,
+  "comments": 342,
+  "author": "travelguru",
+  "authorFollowers": 125000,
+  "imageUrl": "https://instagram.com/...",
+  "videoUrl": null,
+  "isVideo": false,
+  "date": "2026-02-28T14:30:00.000Z",
+  "location": "Ubud, Bali",
+  "hashtags": ["#travel", "#wanderlust", "#bali"],
+  "mentions": [],
+  "postUrl": "https://www.instagram.com/p/C3xK9mNPqRs/",
+  "sourceHashtag": "travel",
+  "scrapedAt": "2026-03-02T10:00:00.000Z",
+  "extractionStrategy": "sharedData"
+}
 ```
 
-## Best Hashtags to Target by Niche
+## How It Works
 
-| Niche | Example Hashtags |
-| --- | --- |
-| Fitness | #gymlife, #fitfam, #workout, #crossfit |
-| Business | #entrepreneur, #startup, #hustle, #smallbusiness |
-| Food | #foodie, #instafood, #homecooking, #mealprep |
-| Travel | #wanderlust, #travelgram, #digitalnomad, #backpacking |
-| Fashion | #ootd, #styleinspo, #fashionblogger, #streetstyle |
-| Tech | #coding, #developer, #saas, #startup |
-| Parenting | #momlife, #dadlife, #parenting, #newmom |
-| Pets | #dogsofinstagram, #catsofinstagram, #petlovers |
+The scraper uses multiple strategies to extract data, falling back automatically if one method fails:
 
-**Pro tip:** More specific hashtags = more relevant users. #veganfitness is better than #vegan.
+1. **Embedded JSON** — Parses `window._sharedData`, `__additionalDataLoaded`, and Relay runtime data embedded in Instagram pages. This provides the richest data including exact like/comment counts, author details, and timestamps.
+2. **Instagram API** — Attempts to use Instagram's internal API endpoints (`/explore/tags/{hashtag}/?__a=1`) for structured JSON responses with full post metadata.
+3. **Meta Tags** — Extracts OpenGraph and Twitter Card meta tags from post pages. Provides image URLs, descriptions, and basic engagement data.
+4. **DOM Parsing** — Falls back to parsing the HTML structure with Cheerio when JSON data is unavailable. Extracts post links, images, and captions from the page layout.
+5. **Google Search Fallback** — When Instagram blocks direct access, searches Google for `site:instagram.com/p/ #hashtag` to discover post URLs, then fetches each individual post page for enrichment.
 
-## Use Cases
+## Proxy Configuration
 
-- **Niche Lead Generation** - Find users passionate about topics related to your product.
-- **Influencer Discovery** - Find micro-influencers in your niche by seeing who creates content.
-- **Local Marketing** - Target local hashtags like #nycfood or #laentrepreneur.
-- **Trend Research** - See who's posting about trending topics.
-- **Community Building** - Find potential members for your niche community.
+Instagram actively blocks scrapers. For best results, use residential proxies:
 
-## Streaming Mode (Auto-Save)
+```
+{
+  "proxyConfiguration": {
+    "useApifyProxy": true,
+    "apifyProxyGroups": ["RESIDENTIAL"]
+  }
+}
+```
 
-This Actor uses **streaming mode** to protect your data:
+Without proxies, the scraper will still attempt to extract data but may encounter rate limiting or login walls. The Google search fallback helps mitigate this.
 
-- Results saved to dataset every 60 seconds
-- No data loss even on timeout or interruption
-- Monitor progress in real-time via logs
-- Partial results always available
+## Pricing
 
-**Example:** If you're scraping 10,000 users and Apify times out at 7,000, you still get those 7,000 users. Just run again to get the rest.
+This actor uses pay-per-event pricing:
 
-## Integrations
+- **$0.003 per post scraped** — You only pay for successfully extracted posts
+- No charge for failed requests or deduplicated posts
+- Comments are included at no extra charge when `includeComments` is enabled
 
-Export your data to:
+## Limitations
 
-- **Google Sheets** - Direct integration, auto-sync results
-- **Zapier / Make (Integromat)** - Trigger workflows when scrape completes
-- **Webhooks** - Get real-time notifications
-- **API** - Programmatic access via Apify API
-- **Download** - JSON / CSV / Excel files
+- Instagram frequently updates its page structure. Extraction strategies are designed to be resilient but may need updates over time.
+- Rate limiting may reduce the number of posts scraped in a single run. Use proxies for best results.
+- Some post metadata (like exact follower counts) may not always be available depending on the extraction strategy used.
+- Very new or very niche hashtags may have limited posts available.
+- Comment extraction requires additional requests and significantly increases run time.
 
-## FAQ
+## Support
 
-### Why is my scrape taking so long?
+For issues, feature requests, or questions, contact: [ricardo.yudi@gmail.com](mailto:ricardo.yudi@gmail.com)
 
-Instagram limits how fast data can be fetched. Popular hashtags with millions of posts require significant time. Our distributed architecture maximizes speed while staying undetected.
+## Integration — Python
 
-### Can I scrape any hashtag?
+```
+from apify_client import ApifyClient
 
-Yes, any public hashtag. However, banned or restricted hashtags may return fewer results.
+client = ApifyClient("YOUR_API_TOKEN")
+run = client.actor("sovereigntaylor/instagram-hashtag-scraper").call(run_input={
+    "searchTerm": "instagram hashtag",
+    "maxResults": 50
+})
 
-### What if the Actor times out?
+for item in client.dataset(run["defaultDatasetId"]).iterate_items():
+    print(f"{item.get('title', item.get('name', 'N/A'))}")
+```
 
-Your data is safe! Streaming mode saves results every 60 seconds to the Apify dataset. If the run times out, you can download whatever was collected.
+## Integration — JavaScript
 
-### Are users deduplicated across hashtags?
+```
+import { ApifyClient } from 'apify-client';
+const client = new ApifyClient({ token: 'YOUR_API_TOKEN' });
 
-Users who posted with multiple hashtags will appear once per hashtag. You can deduplicate by `userId` after export if needed.
+const run = await client.actor('sovereigntaylor/instagram-hashtag-scraper').call({
+    searchTerm: 'instagram hashtag',
+    maxResults: 50
+});
 
-### Can I scrape multiple hashtags at once?
-
-Yes! Provide an array of hashtags. Users from all hashtags will be extracted and you can identify which hashtag each came from via the `sourceHashtag` field.
-
-### How recent are the posts?
-
-We extract users from recent posts. The exact timeframe depends on hashtag popularity - very active hashtags will have more recent posts.
-
-### Should I include the # symbol?
-
-No. Just provide the hashtag text without the # symbol. Example: "fitness" not "#fitness".
-
-### How often can I run this?
-
-As often as you need. Each run is independent. For monitoring hashtag trends, set up scheduled runs via Apify.
-
-## Keywords
-
-Instagram hashtag scraper, export hashtag users, scrape Instagram hashtags, Instagram niche marketing, Instagram audience finder, hashtag lead generation, Instagram interest targeting, find Instagram users by hashtag, Instagram marketing tool, Instagram data extraction
-
-## Need Custom Solutions?
-
-Looking for **custom scraping**, **higher limits**, or **dedicated infrastructure**?
-
-📩 **Contact us:**
-
-- **Telegram:** [@taskforceorange](https://t.me/taskforceorange)
-- **Website:** [social-swarm.com](https://social-swarm.com)
-
-We offer:
-
-- Custom actor development
-- Enterprise-grade scraping solutions
-- Dedicated proxy infrastructure
-- White-label integrations
-- Priority support
-
----
-
-*Built with ❤️ by the InstaPrism team*
+const { items } = await client.dataset(run.defaultDatasetId).listItems();
+items.forEach(item => console.log(item.title || item.name || 'N/A'));
+```
